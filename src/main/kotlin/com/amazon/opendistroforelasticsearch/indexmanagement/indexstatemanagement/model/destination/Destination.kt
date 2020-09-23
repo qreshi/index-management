@@ -21,7 +21,7 @@ import com.amazon.opendistroforelasticsearch.alerting.destination.message.ChimeM
 import com.amazon.opendistroforelasticsearch.alerting.destination.message.CustomWebhookMessage
 import com.amazon.opendistroforelasticsearch.alerting.destination.message.SlackMessage
 import com.amazon.opendistroforelasticsearch.alerting.destination.response.DestinationHttpResponse
-import com.amazon.opendistroforelasticsearch.indexmanagement.indexstatemanagement.elasticapi.convertToMap
+import com.amazon.opendistroforelasticsearch.indexmanagement.elasticapi.convertToMap
 import org.apache.logging.log4j.LogManager
 import org.elasticsearch.common.xcontent.ToXContent
 import org.elasticsearch.common.xcontent.ToXContentObject
