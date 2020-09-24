@@ -61,6 +61,7 @@ class TransportRemovePolicyAction @Inject constructor(
         private val indicesToRemovePolicyFrom: MutableList<Index> = mutableListOf()
         private var updated: Int = 0
 
+        @Suppress("SpreadOperator")
         fun start() {
             val strictExpandOptions = IndicesOptions.strictExpand()
 
