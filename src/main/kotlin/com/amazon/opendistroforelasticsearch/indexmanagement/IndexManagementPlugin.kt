@@ -155,12 +155,12 @@ internal class IndexManagementPlugin : JobSchedulerExtension, NetworkPlugin, Act
                     Policy.POLICY_TYPE -> {
                         return@ScheduledJobParser null
                     }
-                    Rollup.ROLLUP_TYPE -> {
-                        return@ScheduledJobParser Rollup.parse(xcp, id, jobDocVersion.seqNo, jobDocVersion.primaryTerm)
-                    }
-                    RollupMetadata.ROLLUP_METADATA_TYPE -> {
-                        return@ScheduledJobParser null
-                    }
+//                    Rollup.ROLLUP_TYPE -> {
+//                        return@ScheduledJobParser Rollup.parse(xcp, id, jobDocVersion.seqNo, jobDocVersion.primaryTerm)
+//                    }
+//                    RollupMetadata.ROLLUP_METADATA_TYPE -> {
+//                        return@ScheduledJobParser null
+//                    }
                     else -> {
                         logger.warn("Unsupported document was indexed in $INDEX_MANAGEMENT_INDEX with type: $fieldName")
                         xcp.skipChildren()
@@ -189,13 +189,13 @@ internal class IndexManagementPlugin : JobSchedulerExtension, NetworkPlugin, Act
             RestRetryFailedManagedIndexAction(),
             RestAddPolicyAction(),
             RestRemovePolicyAction(),
-            RestChangePolicyAction(),
-            RestDeleteRollupAction(),
-            RestGetRollupAction(),
-            RestIndexRollupAction(),
-            RestStartRollupAction(),
-            RestStopRollupAction(),
-            RestExplainRollupAction()
+            RestChangePolicyAction()
+//            RestDeleteRollupAction(),
+//            RestGetRollupAction(),
+//            RestIndexRollupAction(),
+//            RestStartRollupAction(),
+//            RestStopRollupAction(),
+//            RestExplainRollupAction()
         )
     }
 
@@ -221,19 +221,19 @@ internal class IndexManagementPlugin : JobSchedulerExtension, NetworkPlugin, Act
             .registerScriptService(scriptService)
             .registerSettings(settings)
             .registerConsumers() // registerConsumers must happen after registerSettings/clusterService
-        val rollupRunner = RollupRunner
-            .registerClient(client)
-            .registerClusterService(clusterService)
-            .registerNamedXContentRegistry(xContentRegistry)
-            .registerScriptService(scriptService)
-            .registerSettings(settings)
-            .registerThreadPool(threadPool)
-            .registerMapperService(RollupMapperService(client, clusterService, indexNameExpressionResolver))
-            .registerIndexer(RollupIndexer(settings, clusterService, client))
-            .registerSearcher(RollupSearchService(settings, clusterService, client))
-            .registerMetadataServices(RollupMetadataService(client, xContentRegistry))
-            .registerConsumers()
-        rollupInterceptor = RollupInterceptor(clusterService, settings, indexNameExpressionResolver)
+//        val rollupRunner = RollupRunner
+//            .registerClient(client)
+//            .registerClusterService(clusterService)
+//            .registerNamedXContentRegistry(xContentRegistry)
+//            .registerScriptService(scriptService)
+//            .registerSettings(settings)
+//            .registerThreadPool(threadPool)
+//            .registerMapperService(RollupMapperService(client, clusterService, indexNameExpressionResolver))
+//            .registerIndexer(RollupIndexer(settings, clusterService, client))
+//            .registerSearcher(RollupSearchService(settings, clusterService, client))
+//            .registerMetadataServices(RollupMetadataService(client, xContentRegistry))
+//            .registerConsumers()
+//        rollupInterceptor = RollupInterceptor(clusterService, settings, indexNameExpressionResolver)
         this.indexNameExpressionResolver = indexNameExpressionResolver
         indexManagementIndices = IndexManagementIndices(client.admin().indices(), clusterService)
         val indexStateManagementHistory =
@@ -247,7 +247,8 @@ internal class IndexManagementPlugin : JobSchedulerExtension, NetworkPlugin, Act
 
         val managedIndexCoordinator = ManagedIndexCoordinator(environment.settings(),
             client, clusterService, threadPool, indexManagementIndices)
-        return listOf(managedIndexRunner, rollupRunner, indexManagementIndices, managedIndexCoordinator, indexStateManagementHistory)
+//        return listOf(managedIndexRunner, rollupRunner, indexManagementIndices, managedIndexCoordinator, indexStateManagementHistory)
+        return listOf(managedIndexRunner, indexManagementIndices, managedIndexCoordinator, indexStateManagementHistory)
     }
 
     override fun getSettings(): List<Setting<*>> {
@@ -264,14 +265,14 @@ internal class IndexManagementPlugin : JobSchedulerExtension, NetworkPlugin, Act
             ManagedIndexSettings.SWEEP_PERIOD,
             ManagedIndexSettings.COORDINATOR_BACKOFF_COUNT,
             ManagedIndexSettings.COORDINATOR_BACKOFF_MILLIS,
-            ManagedIndexSettings.ALLOW_LIST,
-            RollupSettings.ROLLUP_INGEST_BACKOFF_COUNT,
-            RollupSettings.ROLLUP_INGEST_BACKOFF_MILLIS,
-            RollupSettings.ROLLUP_SEARCH_BACKOFF_COUNT,
-            RollupSettings.ROLLUP_SEARCH_BACKOFF_MILLIS,
-            RollupSettings.ROLLUP_INDEX,
-            RollupSettings.ROLLUP_ENABLED,
-            RollupSettings.ROLLUP_SEARCH_ENABLED
+            ManagedIndexSettings.ALLOW_LIST
+//            RollupSettings.ROLLUP_INGEST_BACKOFF_COUNT,
+//            RollupSettings.ROLLUP_INGEST_BACKOFF_MILLIS,
+//            RollupSettings.ROLLUP_SEARCH_BACKOFF_COUNT,
+//            RollupSettings.ROLLUP_SEARCH_BACKOFF_MILLIS,
+//            RollupSettings.ROLLUP_INDEX,
+//            RollupSettings.ROLLUP_ENABLED,
+//            RollupSettings.ROLLUP_SEARCH_ENABLED
         )
     }
 
@@ -286,19 +287,19 @@ internal class IndexManagementPlugin : JobSchedulerExtension, NetworkPlugin, Act
             ActionPlugin.ActionHandler(IndexPolicyAction.INSTANCE, TransportIndexPolicyAction::class.java),
             ActionPlugin.ActionHandler(ExplainAction.INSTANCE, TransportExplainAction::class.java),
             ActionPlugin.ActionHandler(DeletePolicyAction.INSTANCE, TransportDeletePolicyAction::class.java),
-            ActionPlugin.ActionHandler(GetPolicyAction.INSTANCE, TransportGetPolicyAction::class.java),
-            ActionPlugin.ActionHandler(DeleteRollupAction.INSTANCE, TransportDeleteRollupAction::class.java),
-            ActionPlugin.ActionHandler(GetRollupAction.INSTANCE, TransportGetRollupAction::class.java),
-            ActionPlugin.ActionHandler(GetRollupsAction.INSTANCE, TransportGetRollupsAction::class.java),
-            ActionPlugin.ActionHandler(IndexRollupAction.INSTANCE, TransportIndexRollupAction::class.java),
-            ActionPlugin.ActionHandler(StartRollupAction.INSTANCE, TransportStartRollupAction::class.java),
-            ActionPlugin.ActionHandler(StopRollupAction.INSTANCE, TransportStopRollupAction::class.java),
-            ActionPlugin.ActionHandler(ExplainRollupAction.INSTANCE, TransportExplainRollupAction::class.java),
-            ActionPlugin.ActionHandler(UpdateRollupMappingAction.INSTANCE, TransportUpdateRollupMappingAction::class.java)
+            ActionPlugin.ActionHandler(GetPolicyAction.INSTANCE, TransportGetPolicyAction::class.java)
+//            ActionPlugin.ActionHandler(DeleteRollupAction.INSTANCE, TransportDeleteRollupAction::class.java),
+//            ActionPlugin.ActionHandler(GetRollupAction.INSTANCE, TransportGetRollupAction::class.java),
+//            ActionPlugin.ActionHandler(GetRollupsAction.INSTANCE, TransportGetRollupsAction::class.java),
+//            ActionPlugin.ActionHandler(IndexRollupAction.INSTANCE, TransportIndexRollupAction::class.java),
+//            ActionPlugin.ActionHandler(StartRollupAction.INSTANCE, TransportStartRollupAction::class.java),
+//            ActionPlugin.ActionHandler(StopRollupAction.INSTANCE, TransportStopRollupAction::class.java),
+//            ActionPlugin.ActionHandler(ExplainRollupAction.INSTANCE, TransportExplainRollupAction::class.java),
+//            ActionPlugin.ActionHandler(UpdateRollupMappingAction.INSTANCE, TransportUpdateRollupMappingAction::class.java)
         )
     }
 
-    override fun getTransportInterceptors(namedWriteableRegistry: NamedWriteableRegistry, threadContext: ThreadContext): List<TransportInterceptor> {
-        return listOf(rollupInterceptor)
-    }
+//    override fun getTransportInterceptors(namedWriteableRegistry: NamedWriteableRegistry, threadContext: ThreadContext): List<TransportInterceptor> {
+//        return listOf(rollupInterceptor)
+//    }
 }
